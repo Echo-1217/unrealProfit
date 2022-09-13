@@ -1,0 +1,17 @@
+com\example\API\test\controller\dto\response\HCMIOResponse.class
+com\example\API\test\model\entity\HCMIO$HCIMO_ID.class
+com\example\API\test\service\MSTMBService.class
+com\example\API\test\controller\HCMIOController.class
+com\example\API\test\ApiTestApplication.class
+com\example\API\test\model\MSTMBRepository.class
+com\example\API\test\controller\dto\request\CreateHcmioRequest.class
+com\example\API\test\model\entity\HCMIO.class
+com\example\API\test\model\TCNUDRepository.class
+com\example\API\test\model\entity\TCNUD.class
+com\example\API\test\service\HCMIOService.class
+com\example\API\test\controller\TCNUDController.class
+com\example\API\test\model\entity\TCNUD$TCNUD_ID.class
+com\example\API\test\model\entity\MSTMB.class
+com\example\API\test\controller\dto\response\TCNUDResponse.class
+com\example\API\test\service\TCNUDService.class
+com\example\API\test\model\HCMIORepository.class
