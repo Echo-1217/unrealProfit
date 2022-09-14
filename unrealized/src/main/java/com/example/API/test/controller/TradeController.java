@@ -27,14 +27,15 @@ public class TradeController {
     }
 
     @PostMapping("/detail")
-    public TransactionResponse getUnrealized(@RequestBody UnrealProfitRequest request){
+    public TransactionResponse getUnrealized(@RequestBody UnrealProfitRequest request) {
         return this.tradeService.getUnrealValue(request);
     }
 
     @PostMapping("/sum")
     public SumUnrealProfitResponse getSumUnrealized(@RequestBody UnrealProfitRequest request) {
-        return  this.tradeService.getSum(request);
+        return this.tradeService.getSum(request);
     }
+
     @PostMapping("/settlement")
     public SettlementAmountResponse getSettlementAmount(@RequestBody UnrealProfitRequest request) throws ParseException {
         return this.tradeService.getSettlementAmount(request);

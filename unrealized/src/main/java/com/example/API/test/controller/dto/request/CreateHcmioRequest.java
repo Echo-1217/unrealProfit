@@ -14,7 +14,7 @@ public class CreateHcmioRequest {
     private String TradeDate;
     private String BranchNo;
     private String CustSeq;
-    private String BsType="B"; //買賣別
+    private String BsType = "B"; //買賣別
     private String Stock; //股票代號
     private Double price;
     private Long Qty;

@@ -251,13 +251,13 @@ public class TradeService {
                 T++;
             }
         }
-        if(null==tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))){
+        if (null == tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))) {
             response.setResponseCode("001");
             response.setMessage("查無符合資料");
             return response;
         }
         response.setSettlementAmount(tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
-        response.setTcnudList(tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(),dateFormat.format(today.getTime())));
+        response.setTcnudList(tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
         response.setResponseCode("000");
         response.setMessage("Success");
         return response;
