@@ -48,7 +48,7 @@ public class MSTMBService {
         List<StockInfo> stockInfoList = new ArrayList<>();
         List<MSTMB> mstmbList = new ArrayList<>();
 
-        if (null == request.getStock()) {
+        if (null == request.getStock() || request.getStock().isBlank() || request.getStock().isEmpty()) {
             response.setResponseCode("002");
             response.setMessage("必須輸入股票代號");
             return response;

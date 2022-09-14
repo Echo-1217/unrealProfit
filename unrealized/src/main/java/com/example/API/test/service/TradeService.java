@@ -266,8 +266,9 @@ public class TradeService {
     private String checkCreateRequest(CreateHcmioRequest request) {
         StringBuilder message = new StringBuilder();
         request.setBranchNo(request.getBranchNo().toUpperCase());
-        if (null == request.getPrice() || null == request.getBranchNo() || null == request.getCustSeq() || null == request.getQty() || null == request.getStock() || request.getBsType().isEmpty() || request.getBsType().isBlank() || request.getCustSeq().isEmpty() || request.getCustSeq().isBlank() || request.getBranchNo().isBlank() || request.getBranchNo().isEmpty()) {
-            message.append("資料不完整  ");
+        if (null == request.getPrice() || null == request.getBranchNo() || null == request.getCustSeq() || null == request.getQty() || null == request.getStock() || request.getStock().isEmpty() || request.getStock().isBlank() || request.getCustSeq().isEmpty() || request.getCustSeq().isBlank() || request.getBranchNo().isBlank() || request.getBranchNo().isEmpty()) {
+            message.append("資料不完整 ");
+            return message.toString();
         }
         if (null == mstmbRepository.findByStock(request.getStock())) {
             message.append("沒有這支股票 ");
@@ -278,10 +279,7 @@ public class TradeService {
         if (!request.getBsType().equals("B") && !request.getBsType().equals("S")) {
             message.append("買賣別必須為 'S' , 'B' ");
         }
-        if (request.getQty() < 0L) {
-            message.append("交易數量無效 ");
-        }
-        if (request.getPrice().isNaN() || request.getPrice() < 10.0) { // min price = 10
+        if (!request.getPrice().isNaN() && null != request.getPrice() && request.getPrice() < 10.0) { // min price = 10
             message.append("價格必須為正數且>10 ");
         }
         return message.toString();
@@ -363,6 +361,11 @@ public class TradeService {
         }
         if (null != request.getMinLimit() && 0 == request.getMinLimit()) {
             message.append("min can not be 0 ");
+        }
+        if (null != request.getStock() && !request.getStock().isEmpty() && !request.getStock().isBlank()) {
+            if (null == mstmbRepository.findByStock(request.getStock())) {
+                message.append("stock does not exist");
+            }
         }
         return message.toString();
     }
