@@ -40,20 +40,16 @@ public class TradeService {
     //=============================================================================
     public TransactionResponse getUnrealValue(UnrealProfitRequest request) {
         TransactionResponse response = new TransactionResponse();
+
+        // check
         String checkResult = checkUnrealProfitRequest(request);
         if (checkResult.length() > 1) {
-            response.setMessage(checkResult);
-            response.setResponseCode("002");
+            response.setResponseCode(checkResult.substring(0, 3));//0~2
+            response.setMessage(checkResult.substring(3));//3~end
             return response;
         }
         // ============符合格式=============
         List<String> stockList = getStockList(request);
-
-        if (null == stockList) {
-            response.setResponseCode("001");
-            response.setMessage("查無符合資料");
-            return response;
-        }
 
         List<Detail> detail = new ArrayList<>();
         for (String stock : stockList) {
@@ -81,20 +77,16 @@ public class TradeService {
 
     public SumUnrealProfitResponse getSum(UnrealProfitRequest request) {
         SumUnrealProfitResponse response = new SumUnrealProfitResponse();
+
+        // check
         String checkResult = checkUnrealProfitRequest(request);
         if (checkResult.length() > 1) {
-            response.setMessage(checkResult);
-            response.setResponseCode("002");
+            response.setResponseCode(checkResult.substring(0, 3));//0~2
+            response.setMessage(checkResult.substring(3));//3~end
             return response;
         }
         // ============符合格式=============
         List<String> stockList = getStockList(request);
-
-        if (null == stockList) {
-            response.setResponseCode("001");
-            response.setMessage("查無符合資料");
-            return response;
-        }
 
         List<UnrealProfitResult> unrealProfitResultList = new ArrayList<>();
         try {
@@ -334,7 +326,7 @@ public class TradeService {
         return newDocSeq;
     }
 
-    private List<String> getStockList(UnrealProfitRequest request) {
+    private List<String> getStockList(UnrealProfitRequest request) {//不管有沒有給 stock 都回傳相關值
         List<String> stockList = tcnudRepository.getStockList(request.getBranchNo(), request.getCustSeq());
         if (stockList.isEmpty()) {
             return null;
@@ -348,27 +340,26 @@ public class TradeService {
 
     private String checkUnrealProfitRequest(UnrealProfitRequest request) {
 
-        StringBuilder message = new StringBuilder();
+        StringBuilder checkResult = new StringBuilder();
         if (null == request.getBranchNo() || request.getBranchNo().isBlank() || request.getBranchNo().isEmpty()) {
-            message.append("BranchNo is null,empty or blank ");
+            checkResult.append("002BranchNo is null,empty or blank ");
         } else {
             request.setBranchNo(request.getBranchNo().toUpperCase());
         }
         if (null == request.getCustSeq() || request.getCustSeq().isEmpty() || request.getCustSeq().isBlank()) {
-            message.append("CustSeq is null,empty or blank ");
-        }
-        if (null != request.getMaxLimit() && 0 == request.getMaxLimit()) {
-            message.append("max can not be 0 ");
-        }
-        if (null != request.getMinLimit() && 0 == request.getMinLimit()) {
-            message.append("min can not be 0 ");
-        }
-        if (null != request.getStock() && !request.getStock().isEmpty() && !request.getStock().isBlank()) {
+            checkResult.append("002CustSeq is null,empty or blank ");
+        } else if (null != request.getMaxLimit() && 0 == request.getMaxLimit()) {
+            checkResult.append("002max can not be 0 ");
+        } else if (null != request.getMinLimit() && 0 == request.getMinLimit()) {
+            checkResult.append("002min can not be 0 ");
+        } else if (null != request.getStock() && !request.getStock().isEmpty() && !request.getStock().isBlank()) {
             if (null == mstmbRepository.findByStock(request.getStock())) {
-                message.append("stock does not exist");
+                checkResult.append("001stock does not exist");
             }
+        } else if (tcnudRepository.getStockList(request.getBranchNo(), request.getCustSeq()).isEmpty()) {
+            checkResult.append("001查無資料");
         }
-        return message.toString();
+        return checkResult.toString();
     }
 
     private List<Detail> getDetailltList(UnrealProfitRequest request) {

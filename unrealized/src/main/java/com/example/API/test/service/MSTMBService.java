@@ -48,9 +48,10 @@ public class MSTMBService {
         List<StockInfo> stockInfoList = new ArrayList<>();
         List<MSTMB> mstmbList = new ArrayList<>();
 
-        if (null == request.getStock() || request.getStock().isBlank() || request.getStock().isEmpty()) {
-            response.setResponseCode("002");
-            response.setMessage("必須輸入股票代號");
+        String message = checkStockRequest(request);
+        if (message.length() > 1) {
+            response.setResponseCode(message.substring(0, 3));//0~2
+            response.setMessage(message.substring(3));//3~end
             return response;
         }
 
@@ -76,12 +77,15 @@ public class MSTMBService {
     public StockInfoResponse findByStock(StockRequest request) {
         StockInfoResponse response = new StockInfoResponse();
         StockInfo stockInfo = new StockInfo();
-        MSTMB mstmb = repository.findByStock(request.getStock());
-        if (null == mstmb) {
-            response.setResponseCode("001");
-            response.setMessage("查無結果");
+        // check
+        String checkResult = checkStockRequest(request);
+        if (checkResult.length() > 1) {
+            response.setResponseCode(checkResult.substring(0, 3));//0~2
+            response.setMessage(checkResult.substring(3));//3~end
             return response;
         }
+
+        MSTMB mstmb = repository.findByStock(request.getStock());
         stockInfo.setStock(mstmb.getStock());
         stockInfo.setCurPrice(numberFormat(mstmb.getCurPrice()));
         stockInfo.setStockName(mstmb.getStockName());
@@ -92,6 +96,17 @@ public class MSTMBService {
         response.setResponseCode("000");
         response.setMessage("success");
         return response;
+    }
+
+    private String checkStockRequest(StockRequest request) {
+        StringBuilder checkResult = new StringBuilder();
+        if (null == request.getStock() || request.getStock().isBlank() || request.getStock().isEmpty()) {
+            checkResult.append("002必須輸入股票代號");
+            return checkResult.toString();
+        } else if (null == repository.findByStock(request.getStock())) {
+            checkResult.append("001stock does not exist");
+        }
+        return checkResult.toString();
     }
 
     private String numberFormat(double value) {
