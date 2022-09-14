@@ -2,6 +2,7 @@ package com.example.API.test.controller;
 
 import com.example.API.test.controller.dto.request.CreateHcmioRequest;
 import com.example.API.test.controller.dto.request.UnrealProfitRequest;
+import com.example.API.test.controller.dto.response.SettlementAmountResponse;
 import com.example.API.test.controller.dto.response.SumUnrealProfitResponse;
 import com.example.API.test.controller.dto.response.TransactionResponse;
 import com.example.API.test.service.TradeService;
@@ -35,7 +36,7 @@ public class TradeController {
         return  this.tradeService.getSum(request);
     }
     @PostMapping("/settlement")
-    public Long getSettlementAmount(@RequestBody UnrealProfitRequest request) throws ParseException {
+    public SettlementAmountResponse getSettlementAmount(@RequestBody UnrealProfitRequest request) throws ParseException {
         return this.tradeService.getSettlementAmount(request);
     }
 }

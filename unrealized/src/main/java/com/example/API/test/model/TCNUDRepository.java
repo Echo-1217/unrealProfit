@@ -12,8 +12,8 @@ import java.util.List;
 @Repository
 public interface TCNUDRepository extends JpaRepository<TCNUD, TCNUD.TCNUD_ID> {
 
-//    @Query(value = "SELECT  *  from tcnud WHERE BranchNo=?1 AND CustSeq=?2",nativeQuery = true)
-//    List<TCNUD> findByBC(String BranchNo, String CustSeq);
+    @Query(value = "SELECT  *  from tcnud WHERE BranchNo=?1 AND CustSeq=?2 AND TradeDate=?3",nativeQuery = true)
+    List<TCNUD> findByBCT(String BranchNo, String CustSeq, String TradeDate);
 
     @Modifying
     @Transactional
@@ -35,9 +35,6 @@ public interface TCNUDRepository extends JpaRepository<TCNUD, TCNUD.TCNUD_ID> {
     @Query(value = "SELECT  *  from tcnud WHERE BranchNo=?1 AND CustSeq=?2 AND Stock=?3", nativeQuery = true)
     List<TCNUD> findByBCS(String BranchNo, String CustSeq, String Stock);
 
-
-    @Query(value = "SELECT  *  from tcnud WHERE TradeDate=?1 AND BranchNo=?2 AND CustSeq=?3 AND DocSeq=?4", nativeQuery = true)
-    List<TCNUD>  findByTBCD(String TradeDate , String BranchNo, String CustSeq, String DocSeq);
 
     @Query(value = "select distinct Stock from tcnud where BranchNo = ?1 and CustSeq = ?2 order by Stock", nativeQuery = true)
     List<String> getStockList(String branchNo ,String custSeq);

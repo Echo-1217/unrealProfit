@@ -2,10 +2,7 @@ package com.example.API.test.service;
 
 import com.example.API.test.controller.dto.request.CreateHcmioRequest;
 import com.example.API.test.controller.dto.request.UnrealProfitRequest;
-import com.example.API.test.controller.dto.response.Detail;
-import com.example.API.test.controller.dto.response.SumUnrealProfitResponse;
-import com.example.API.test.controller.dto.response.TransactionResponse;
-import com.example.API.test.controller.dto.response.UnrealProfitResult;
+import com.example.API.test.controller.dto.response.*;
 import com.example.API.test.model.HCMIORepository;
 import com.example.API.test.model.MSTMBRepository;
 import com.example.API.test.model.TCNUDRepository;
@@ -43,8 +40,9 @@ public class TradeService {
     //=============================================================================
     public TransactionResponse getUnrealValue(UnrealProfitRequest request) {
         TransactionResponse response = new TransactionResponse();
-        if (checkData(request).length() > 1) {
-            response.setMessage(checkData(request));
+        String checkResult = checkUnrealProfitRequest(request);
+        if (checkResult.length() > 1) {
+            response.setMessage(checkResult);
             response.setResponseCode("002");
             return response;
         }
@@ -53,7 +51,7 @@ public class TradeService {
 
         if (null == stockList) {
             response.setResponseCode("001");
-            response.setMessage("查無此客戶資料...");
+            response.setMessage("查無符合資料");
             return response;
         }
 
@@ -64,7 +62,7 @@ public class TradeService {
 
         if (detail.isEmpty()) {
             response.setResponseCode("001");
-            response.setMessage("查無交易結果...");
+            response.setMessage("查無符合資料");
             return response;
         }
         try {
@@ -83,8 +81,9 @@ public class TradeService {
 
     public SumUnrealProfitResponse getSum(UnrealProfitRequest request) {
         SumUnrealProfitResponse response = new SumUnrealProfitResponse();
-        if (checkData(request).length() > 1) {
-            response.setMessage(checkData(request));
+        String checkResult = checkUnrealProfitRequest(request);
+        if (checkResult.length() > 1) {
+            response.setMessage(checkResult);
             response.setResponseCode("002");
             return response;
         }
@@ -93,7 +92,7 @@ public class TradeService {
 
         if (null == stockList) {
             response.setResponseCode("001");
-            response.setMessage("查無此客戶資料");
+            response.setMessage("查無符合資料");
             return response;
         }
 
@@ -128,7 +127,7 @@ public class TradeService {
         }
         if (unrealProfitResultList.isEmpty()) {
             response.setResponseCode("001");
-            response.setMessage("查無交易結果...");
+            response.setMessage("查無符合資料");
             return response;
         }
         return new SumUnrealProfitResponse(
@@ -223,24 +222,45 @@ public class TradeService {
         return response;
     }
 
-    public Long getSettlementAmount(UnrealProfitRequest request) throws ParseException {
+    public SettlementAmountResponse getSettlementAmount(UnrealProfitRequest request) throws ParseException {
+
+        SettlementAmountResponse response = new SettlementAmountResponse();
         CalendarUtils cu = new CalendarUtils();
-        cu.init(cu);
+        cu.init(cu);// 設定今年度國定假日(平日)
         Calendar today = Calendar.getInstance();
-        Calendar target = Calendar.getInstance();
-        target.add(Calendar.DATE, -2); //回推兩天工作天
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");// formatter 定義格式
-        while (0 != today.compareTo(target)) {
+
+        //若今天查詢日期是假日
+        if (cu.isHoliday(today)) {
+            response.setResponseCode("003");
+            response.setMessage("非交易時間");
+            return response;
+        }
+
+        //檢查request格式
+        if (null == request.getBranchNo() || request.getBranchNo().isEmpty() || request.getBranchNo().isBlank() || null == request.getCustSeq() || request.getCustSeq().isBlank() || request.getCustSeq().isEmpty()) {
+            response.setResponseCode("002");
+            response.setMessage("格式錯誤");
+        }
+
+        // 計算交易日
+        int T = 0; //
+        while (T < 2) {
             today.add(Calendar.DATE, -1);
-            if (cu.isHoliday(today)) {// 判定是否為國定假日，六日.....
-                target.add(Calendar.DATE, -1);
+            if (!cu.isHoliday(today)) {// 判定是否為國定假日(平日)，六日
+                T++;
             }
         }
-        Long amount = tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()));
-        if (null == amount) {
-            return 0L;
+        if(null==tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))){
+            response.setResponseCode("001");
+            response.setMessage("查無符合資料");
+            return response;
         }
-        return amount;
+        response.setSettlementAmount(tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
+        response.setTcnudList(tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(),dateFormat.format(today.getTime())));
+        response.setResponseCode("000");
+        response.setMessage("Success");
+        return response;
     }
 
     private String checkCreateRequest(CreateHcmioRequest request) {
@@ -327,7 +347,7 @@ public class TradeService {
         return stockList;
     }
 
-    private String checkData(UnrealProfitRequest request) {
+    private String checkUnrealProfitRequest(UnrealProfitRequest request) {
 
         StringBuilder message = new StringBuilder();
         if (null == request.getBranchNo() || request.getBranchNo().isBlank() || request.getBranchNo().isEmpty()) {
