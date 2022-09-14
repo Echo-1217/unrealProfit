@@ -285,6 +285,7 @@ public class TradeService {
         return message.toString();
     }
 
+    // 自動生成委託書號
     private String getNewDocSeq(String date) {//流水單號
 
         String lastDocSeq = hcmioRepository.getLastDocSeq(date);

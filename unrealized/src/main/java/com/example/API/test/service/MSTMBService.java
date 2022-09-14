@@ -57,8 +57,12 @@ public class MSTMBService {
         // 如果要隨機更新單價 則不需輸入
         if (null == request.getPrice() && null != request.getStock()) {
             getNowPrice(request.getStock(), null);
-        } else if (null != request.getPrice() && null != request.getStock() && request.getPrice() > 0) {
+        } else if (null != request.getPrice() && null != request.getStock() && request.getPrice() >= 10) {
             getNowPrice(request.getStock(), request.getPrice());
+        } else if (null != request.getPrice() && null != request.getStock() && request.getPrice() < 10) {
+            response.setResponseCode("002");
+            response.setMessage("price 不得 < 10");
+            return response;
         }
 
         mstmbList.add(repository.findByStock(request.getStock()));
