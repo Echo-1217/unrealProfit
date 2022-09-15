@@ -53,7 +53,7 @@ public class TradeService {
 
         List<Detail> detail = new ArrayList<>();
         for (String stock : stockList) {
-            detail.addAll(getDetailltList(new UnrealProfitRequest(request.getBranchNo(), request.getCustSeq(), stock, request.getMinLimit(), request.getMaxLimit())));
+            detail.addAll(getDetailList(new UnrealProfitRequest(request.getBranchNo(), request.getCustSeq(), stock, request.getMinLimit(), request.getMaxLimit())));
         }
 
         if (detail.isEmpty()) {
@@ -94,7 +94,7 @@ public class TradeService {
 //                mstmbService.getNowPrice(stock);// 讓股票資訊價格隨機更動
                 MSTMB mstmb = mstmbRepository.findByStock(stock);
                 UnrealProfitResult unrealProfitResult = new UnrealProfitResult();
-                List<Detail> detailList = getDetailltList(new UnrealProfitRequest(request.getBranchNo(), request.getCustSeq(), stock, request.getMinLimit(), request.getMaxLimit()));
+                List<Detail> detailList = getDetailList(new UnrealProfitRequest(request.getBranchNo(), request.getCustSeq(), stock, request.getMinLimit(), request.getMaxLimit()));
                 if (!detailList.isEmpty()) {
                     unrealProfitResult.setDetail(detailList); // 過濾後可能為空List
                     for (Detail detail : unrealProfitResult.getDetail()) {
@@ -362,7 +362,7 @@ public class TradeService {
         return checkResult.toString();
     }
 
-    private List<Detail> getDetailltList(UnrealProfitRequest request) {
+    private List<Detail> getDetailList(UnrealProfitRequest request) {
         List<TCNUD> tcnudList = tcnudRepository.findByBCS(request.getBranchNo(), request.getCustSeq(), request.getStock());
         List<Detail> detailRespons = new ArrayList<>();
         MSTMB mstmb = mstmbRepository.findByStock(request.getStock());

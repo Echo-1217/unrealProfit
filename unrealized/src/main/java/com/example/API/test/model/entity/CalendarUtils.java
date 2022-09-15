@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CalendarUtils {
     Calendar calendar = Calendar.getInstance();
@@ -29,7 +30,7 @@ public class CalendarUtils {
                     + "] holiday data!");
             NationalHolidays = this.getYearOfHolidayList(year);
         }
-        return NationalHolidays;
+        return NationalHolidays.stream().sorted(Comparator.comparing(m -> m.substring(5))).collect(Collectors.toList());
     }
 
     public void setYear(int year) {
@@ -94,8 +95,8 @@ public class CalendarUtils {
             return false;
         }
         // 1.六日
-        String dayofweek = getDayOfWeek(cal);
-        if (dayofweek.equals("六") || dayofweek.equals("日")) {
+        String dayOfWeek = getDayOfWeek(cal);
+        if (dayOfWeek.equals("六") || dayOfWeek.equals("日")) {
             return true;
         }
 
@@ -135,28 +136,27 @@ public class CalendarUtils {
             d++;
         }
         System.out.println(year + "年今年共 " + (d - 1) + "天");
-// System.out.println(holidayList);
         return holidayList;
-
     }
 
     private String getDate(Calendar cal) {
-        return getYear(cal) + "/" + getMonth(cal) + "/" + getDayOfMonth(cal);
+        return getYear(cal) + "/" + (getMonth(cal) < 10 ? "0" + getMonth(cal) : getMonth(cal)) + "/" + (getDayOfMonth(cal) < 10 ? "0" + getDayOfMonth(cal) : getDayOfMonth(cal));
     }
 
-    public void init(CalendarUtils cu) throws ParseException {
-        cu.addHoliday("2022/1/31");
-        cu.addHoliday("2022/2/1");
-        cu.addHoliday("2022/2/2");
-        cu.addHoliday("2022/2/3");
-        cu.addHoliday("2022/2/4");
-        cu.addHoliday("2022/2/28");
-        cu.addHoliday("2022/4/4");
-        cu.addHoliday("2022/4/5");
-        cu.addHoliday("2022/5/1");
-        cu.addHoliday("2022/6/3");
-        cu.addHoliday("2022/9/9");
+    public void init(CalendarUtils cu) {
+        cu.addHoliday("2022/01/31");
+        cu.addHoliday("2022/02/01");
+        cu.addHoliday("2022/02/02");
+        cu.addHoliday("2022/02/03");
+        cu.addHoliday("2022/02/04");
+        cu.addHoliday("2022/02/28");
+        cu.addHoliday("2022/04/04");
+        cu.addHoliday("2022/04/05");
+        cu.addHoliday("2022/05/01");
+        cu.addHoliday("2022/06/03");
+        cu.addHoliday("2022/09/09");
         cu.addHoliday("2022/10/10");
-        System.out.println(cu.getHolidays());
+        System.out.println("=======今年的假日列表========");
+        cu.getHolidays().forEach(System.out::println);
     }
 }
