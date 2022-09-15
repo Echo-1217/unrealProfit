@@ -13,6 +13,7 @@ import com.example.API.test.model.entity.TCNUD;
 import org.apache.commons.math3.util.Precision;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -132,7 +133,7 @@ public class TradeService {
 
 
     //===============================================================================
-
+    @Transactional
     public TransactionResponse createHCMIO(CreateHcmioRequest request) {
         Detail detail = new Detail();
         TransactionResponse response = new TransactionResponse();
