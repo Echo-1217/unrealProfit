@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -243,12 +244,18 @@ public class TradeService {
                 T++;
             }
         }
-        if (null == tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))) {
+//        if (null == tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))) { // 資料庫運算
+//            response.setResponseCode("001");
+//            response.setMessage("查無符合資料");
+//            return response;
+//        }
+        if (null == tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(),request.getCustSeq(),dateFormat.format(today.getTime()))) { //內部運算
             response.setResponseCode("001");
             response.setMessage("查無符合資料");
             return response;
         }
-        response.setSettlementAmount(tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
+//        response.setSettlementAmount(tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
+        response.setSettlementAmount(calSumCost(request,dateFormat.format(today.getTime())));
         response.setTcnudList(tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
         response.setResponseCode("000");
         response.setMessage("Success");
@@ -434,5 +441,14 @@ public class TradeService {
 
     private double calProfitability(Long unrealProfit, Long cost) {
         return Precision.round((unrealProfit.doubleValue() / cost.doubleValue()) * 100, 2);
+    }
+
+    private Long calSumCost(UnrealProfitRequest request,String  date){
+        List<TCNUD> tcnudList= tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(),request.getCustSeq(),date);
+        Long sum=0L;
+        for (TCNUD tcnud:tcnudList){
+            sum+=tcnud.getCost();
+        }
+        return sum;
     }
 }
