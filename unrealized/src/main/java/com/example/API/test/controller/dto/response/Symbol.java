@@ -7,11 +7,7 @@ import javax.xml.bind.annotation.*;
 @XmlAccessorType(XmlAccessType.FIELD)
 @Data
 @AllArgsConstructor
-@Getter
-@Setter
 @NoArgsConstructor
-
-
 public class Symbol {
 
     @XmlAttribute

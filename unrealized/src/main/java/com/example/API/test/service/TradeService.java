@@ -183,9 +183,8 @@ public class TradeService {
                     hcmio.getStock(), hcmio.getPrice(), hcmio.getQty(),
                     hcmio.getQty(), hcmio.getFee(), Math.abs(hcmio.getNetAmt()),
                     hcmio.getModDate(), hcmio.getModTime(), hcmio.getModUser());
-
+            hcmioRepository.save(hcmio); //==============存入DB
             //====================明細金額計算完畢後================================
-//            double nowPrice = Double.parseDouble(stockController.findByStock(request.getStock()).getDealprice());// 撈出現價
             double nowPrice = (Double.parseDouble(mstmbService.getStockInfo(request.getStock()).getDealprice()));// 撈出現價
 
             detail.setTradeDate(hcmio.getTradeDate());
@@ -205,7 +204,7 @@ public class TradeService {
             response.setDetail(List.of(detail));
             response.setResponseCode("000");
             response.setMessage("委託成功");
-            hcmioRepository.save(hcmio); //==============存入DB
+
         } catch (Exception exception) {
             response.setResponseCode("005");
             response.setMessage("Service Error");
