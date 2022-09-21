@@ -4,7 +4,7 @@ import com.example.API.test.controller.dto.request.CreateHcmioRequest;
 import com.example.API.test.controller.dto.request.UnrealProfitRequest;
 import com.example.API.test.controller.dto.response.SettlementAmountResponse;
 import com.example.API.test.controller.dto.response.SumUnrealProfitResponse;
-import com.example.API.test.controller.dto.response.TransactionResponse;
+import com.example.API.test.controller.dto.response.DetailResponse;
 import com.example.API.test.service.TradeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,22 +22,42 @@ public class TradeController {
     private TradeService tradeService;
 
     @PostMapping("/add")
-    public TransactionResponse createHcmio(@RequestBody CreateHcmioRequest request) {
-        return this.tradeService.createHCMIO(request);
+    public DetailResponse createHcmio(@RequestBody CreateHcmioRequest request) {
+        try {
+            return this.tradeService.createHCMIO(request);
+        }
+        catch (Exception exception){
+            return new DetailResponse(null,"005","連線失敗");
+        }
     }
 
     @PostMapping("/detail")
-    public TransactionResponse getUnrealized(@RequestBody UnrealProfitRequest request) {
-        return this.tradeService.getUnrealValue(request);
+    public DetailResponse getUnrealized(@RequestBody UnrealProfitRequest request) {
+        try {
+            return this.tradeService.getUnrealValue(request);
+        }
+       catch (Exception exception){
+            return new DetailResponse(null,"005","連線失敗");
+       }
     }
 
     @PostMapping("/sum")
     public SumUnrealProfitResponse getSumUnrealized(@RequestBody UnrealProfitRequest request) {
-        return this.tradeService.getSum(request);
+        try {
+            return this.tradeService.getSum(request);
+        }
+       catch (Exception exception){
+           return new SumUnrealProfitResponse(null,"005","連線失敗");
+       }
     }
 
     @PostMapping("/settlement")
     public SettlementAmountResponse getSettlementAmount(@RequestBody UnrealProfitRequest request) throws ParseException {
-        return this.tradeService.getSettlementAmount(request);
+        try {
+            return this.tradeService.getSettlementAmount(request);
+        }
+        catch (Exception exception){
+            return new SettlementAmountResponse(null,null,"005","連線失敗");
+        }
     }
 }

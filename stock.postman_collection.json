@@ -1,0 +1,203 @@
+{
+	"info": {
+		"_postman_id": "f7b46148-46b5-4b94-8f1c-09bdb8c5fb89",
+		"name": "0907 stock",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22634853"
+	},
+	"item": [
+		{
+			"name": "新增交易",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"branchNo\":\"f62s\",\r\n    \"custSeq\":\"03\",\r\n    \"stock\":\"1217\",\r\n    \"price\": 352,\r\n    \"qty\":\"01111\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/unreal/add",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"unreal",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "未實現損益",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"branchNo\":\"f62s\",\r\n    \"custSeq\":\"03\",\r\n    \"stock\":\"1122\",\r\n    \"minLimit\":-1,\r\n    \"maxLimit\":10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/unreal/detail",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"unreal",
+						"detail"
+					],
+					"query": [
+						{
+							"key": "Stock",
+							"value": "1217",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "未實現損益匯總",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"branchNo\":\"f62s\",\r\n    \"custSeq\":\"03\",\r\n    \"stock\":\"1122\",\r\n    \"minLimit\":-5,\r\n    \"maxLimit\":10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/unreal/sum",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"unreal",
+						"sum"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "當日交割金查詢",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"branchNo\":\"f62s\",\r\n    \"custSeq\":\"03\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/unreal/settlement",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"unreal",
+						"settlement"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新股票現價",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n      \"stock\":\"1217\",\r\n      \"price\":\"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/stockInfo/update",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"stockInfo",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "尋找股票資料",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"stock\":\"1217\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/stockInfo/find",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"stockInfo",
+						"find"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

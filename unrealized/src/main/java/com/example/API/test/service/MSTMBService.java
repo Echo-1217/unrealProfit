@@ -3,6 +3,8 @@ package com.example.API.test.service;
 import com.example.API.test.controller.dto.request.StockRequest;
 import com.example.API.test.controller.dto.response.StockInfo;
 import com.example.API.test.controller.dto.response.StockInfoResponse;
+import com.example.API.test.controller.dto.response.Symbol;
+import com.example.API.test.controller.dto.response.Symbols;
 import com.example.API.test.model.MSTMBRepository;
 import com.example.API.test.model.entity.MSTMB;
 import org.apache.commons.math3.util.Precision;
@@ -10,10 +12,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -112,4 +121,37 @@ public class MSTMBService {
     private String numberFormat(double value) {
         return String.format("%.2f", value);
     }
+
+    public Double getNowPrice(String stock){
+        RestTemplate restTemplate = new RestTemplate();
+        Symbols response= restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock="+stock,Symbols.class);
+        return Double.parseDouble(response.getSymbolList().get(0).getDealprice());
+    }
+
+    public Symbol getStockInfo(String stock){
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            Symbols response= restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock="+stock,Symbols.class);
+            assert response != null;
+            response.getSymbolList().get(0).setResponseCode("000");
+            response.getSymbolList().get(0).setMessage("success");
+            return response.getSymbolList().get(0);
+        }
+        catch (Exception exception){
+            return new Symbol(null,null,null,null,"005","連線失敗");
+        }
+    }
+//    public Symbol getStockInfo(String stock){
+//        try {
+//            RestTemplate restTemplate = new RestTemplate();
+//            Symbol response= restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock="+stock,Symbol.class);
+//            assert response != null;
+//            response.setResponseCode("000");
+//            response.setMessage("success");
+//            return response;
+//        }
+//        catch (Exception exception){
+//            return new Symbol(null,null,null,null,"005","連線失敗");
+//        }
+//    }
 }

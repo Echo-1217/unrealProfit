@@ -4,11 +4,9 @@ import com.example.API.test.controller.dto.request.CreateHcmioRequest;
 import com.example.API.test.controller.dto.request.UnrealProfitRequest;
 import com.example.API.test.controller.dto.response.*;
 import com.example.API.test.model.HCMIORepository;
-import com.example.API.test.model.MSTMBRepository;
 import com.example.API.test.model.TCNUDRepository;
 import com.example.API.test.model.entity.CalendarUtils;
 import com.example.API.test.model.entity.HCMIO;
-import com.example.API.test.model.entity.MSTMB;
 import com.example.API.test.model.entity.TCNUD;
 import org.apache.commons.math3.util.Precision;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,17 +28,20 @@ public class TradeService {
     @Autowired
     private TCNUDRepository tcnudRepository;
     @Autowired
-    private MSTMBRepository mstmbRepository;
-    @Autowired
     private HCMIORepository hcmioRepository;
+    @Autowired
+    private MSTMBService mstmbService;
+
+    @Autowired
+    private CalService calService;
 
     DateTimeFormatter date = DateTimeFormatter.ofPattern("yyyyMMdd");
     DateTimeFormatter time = DateTimeFormatter.ofPattern("HHmmss");
 
 
     //=============================================================================
-    public TransactionResponse getUnrealValue(UnrealProfitRequest request) {
-        TransactionResponse response = new TransactionResponse();
+    public DetailResponse getUnrealValue(UnrealProfitRequest request) {
+        DetailResponse response = new DetailResponse();
 
         // check
         String checkResult = checkUnrealProfitRequest(request);
@@ -93,8 +93,6 @@ public class TradeService {
         List<UnrealProfitResult> unrealProfitResultList = new ArrayList<>();
         try {
             for (String stock : stockList) {
-//                mstmbService.getNowPrice(stock);// 讓股票資訊價格隨機更動
-                MSTMB mstmb = mstmbRepository.findByStock(stock);
                 UnrealProfitResult unrealProfitResult = new UnrealProfitResult();
                 List<Detail> detailList = getDetailList(new UnrealProfitRequest(request.getBranchNo(), request.getCustSeq(), stock, request.getMinLimit(), request.getMaxLimit()));
                 if (!detailList.isEmpty()) {
@@ -105,11 +103,11 @@ public class TradeService {
                         unrealProfitResult.setSumCost((null == unrealProfitResult.getSumCost()) ? detail.getCost() : unrealProfitResult.getSumCost() + detail.getCost());
                     }// 個別彙總
                     unrealProfitResult.setStock(stock);
-                    unrealProfitResult.setStockName(mstmb.getStockName());
-                    unrealProfitResult.setNowPrice(numberFormat(mstmb.getCurPrice()));
-                    unrealProfitResult.setSumMarketValue(calMarketValue(Double.parseDouble(unrealProfitResult.getNowPrice()), unrealProfitResult.getSumRemainQty()));
-                    unrealProfitResult.setSumUnrealProfit(calUnreal(Double.parseDouble(unrealProfitResult.getNowPrice()), unrealProfitResult.getSumCost(), unrealProfitResult.getSumRemainQty()));
-                    unrealProfitResult.setSumProfitability(numberFormat(calProfitability(unrealProfitResult.getSumUnrealProfit(), unrealProfitResult.getSumCost())) + "%");
+                    unrealProfitResult.setStockName(mstmbService.getStockInfo(stock).getShortname());
+                    unrealProfitResult.setNowPrice(numberFormat(mstmbService.getNowPrice(stock)));//20220920 更新股價
+                    unrealProfitResult.setSumMarketValue(calService.calMarketValue(Double.parseDouble(unrealProfitResult.getNowPrice()), unrealProfitResult.getSumRemainQty()));
+                    unrealProfitResult.setSumUnrealProfit(calService.calUnreal(Double.parseDouble(unrealProfitResult.getNowPrice()), unrealProfitResult.getSumCost(), unrealProfitResult.getSumRemainQty()));
+                    unrealProfitResult.setSumProfitability(numberFormat(calService.calProfitability(unrealProfitResult.getSumUnrealProfit(), unrealProfitResult.getSumCost())) + "%");
                     unrealProfitResultList.add(unrealProfitResult); //彙總
                 }
             }
@@ -134,11 +132,10 @@ public class TradeService {
 
     //===============================================================================
     @Transactional
-    public TransactionResponse createHCMIO(CreateHcmioRequest request) {
+    public DetailResponse createHCMIO(CreateHcmioRequest request) {
         Detail detail = new Detail();
-        TransactionResponse response = new TransactionResponse();
+        DetailResponse response = new DetailResponse();
         HCMIO hcmio = new HCMIO();
-        MSTMB mstmb = mstmbRepository.findByStock(request.getStock());
 
         request.setBsType(request.getBsType().toUpperCase());
 
@@ -170,7 +167,7 @@ public class TradeService {
             hcmio.setModTime(time.format(LocalDateTime.now()));
             //cal===============================================================
             hcmio.setPrice(Precision.round(request.getPrice(), 2));//決定買入價格
-            hcmio.setAmt(calAmt(hcmio.getPrice(), hcmio.getQty()));
+            hcmio.setAmt(calService.calAmt(hcmio.getPrice(), hcmio.getQty()));
             hcmio.setFee((long) Precision.round((hcmio.getAmt() * 0.001425), 0));
 
             if (hcmio.getBsType().equals("S")) {// 賣出 目前不考慮
@@ -188,21 +185,22 @@ public class TradeService {
                     hcmio.getModDate(), hcmio.getModTime(), hcmio.getModUser());
 
             //====================明細金額計算完畢後================================
-            double nowPrice = mstmb.getCurPrice();// 撈出現價
+//            double nowPrice = Double.parseDouble(stockController.findByStock(request.getStock()).getDealprice());// 撈出現價
+            double nowPrice = (Double.parseDouble(mstmbService.getStockInfo(request.getStock()).getDealprice()));// 撈出現價
 
             detail.setTradeDate(hcmio.getTradeDate());
             detail.setDocSeq(hcmio.getDocSeq());
             detail.setStock(request.getStock());
-            detail.setStockName(mstmb.getStockName());
+            detail.setStockName(mstmbService.getStockInfo(request.getStock()).getShortname());
             detail.setBuyPrice(numberFormat(request.getPrice()));
             detail.setNowPrice(numberFormat(nowPrice)); // 設定現價
             detail.setQty(request.getQty());
             detail.setRemainQty(hcmio.getQty());
             detail.setFee(hcmio.getFee());
             detail.setCost(Math.abs(hcmio.getNetAmt()));
-            detail.setMarketValue(calMarketValue(nowPrice, detail.getRemainQty()));
-            detail.setUnrealProfit(calUnreal(nowPrice, detail.getCost(), detail.getRemainQty()));
-            detail.setProfitability(numberFormat(calProfitability(detail.getUnrealProfit(), detail.getCost())) + "%");
+            detail.setMarketValue(calService.calMarketValue(nowPrice, detail.getRemainQty()));
+            detail.setUnrealProfit(calService.calUnreal(nowPrice, detail.getCost(), detail.getRemainQty()));
+            detail.setProfitability(numberFormat(calService.calProfitability(detail.getUnrealProfit(), detail.getCost())) + "%");
 
             response.setDetail(List.of(detail));
             response.setResponseCode("000");
@@ -250,13 +248,13 @@ public class TradeService {
 //            response.setMessage("查無符合資料");
 //            return response;
 //        }
-        if (null == tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(),request.getCustSeq(),dateFormat.format(today.getTime()))) { //內部運算
+        if (null == tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))) { //內部運算
             response.setResponseCode("001");
             response.setMessage("查無符合資料");
             return response;
         }
 //        response.setSettlementAmount(tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
-        response.setSettlementAmount(calSumCost(request,dateFormat.format(today.getTime())));
+        response.setSettlementAmount(calService.calSumCost(request, dateFormat.format(today.getTime())));
         response.setTcnudList(tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
         response.setResponseCode("000");
         response.setMessage("Success");
@@ -270,7 +268,7 @@ public class TradeService {
             message.append("資料不完整 ");
             return message.toString();
         }
-        if (null == mstmbRepository.findByStock(request.getStock())) {
+        if (null == mstmbService.getStockInfo(request.getStock()).getMtype()) {
             message.append("沒有這支股票 ");
         }
         if (request.getQty() < 1 && null != request.getQty()) {
@@ -361,7 +359,7 @@ public class TradeService {
         } else if (null != request.getMinLimit() && 0 == request.getMinLimit()) {
             checkResult.append("002min can not be 0 ");
         } else if (null != request.getStock() && !request.getStock().isEmpty() && !request.getStock().isBlank()) {
-            if (null == mstmbRepository.findByStock(request.getStock())) {
+            if (null == mstmbService.getStockInfo(request.getStock()).getMtype()) {
                 checkResult.append("001stock does not exist");
             }
         } else if (tcnudRepository.getStockList(request.getBranchNo(), request.getCustSeq()).isEmpty()) {
@@ -373,9 +371,8 @@ public class TradeService {
     private List<Detail> getDetailList(UnrealProfitRequest request) {
         List<TCNUD> tcnudList = tcnudRepository.findByBCS(request.getBranchNo(), request.getCustSeq(), request.getStock());
         List<Detail> detailRespons = new ArrayList<>();
-        MSTMB mstmb = mstmbRepository.findByStock(request.getStock());
-        String stockName = mstmb.getStockName();
-        double nowPrice = mstmb.getCurPrice();
+        String stockName = mstmbService.getStockInfo(request.getStock()).getShortname();
+        Double nowPrice = mstmbService.getNowPrice(request.getStock());
         for (TCNUD tcnud : tcnudList) {
             detailRespons.add(new Detail(
                     tcnud.getTradeDate(),
@@ -388,9 +385,9 @@ public class TradeService {
                     tcnud.getRemainQty(),
                     tcnud.getFee(),
                     tcnud.getCost(),
-                    calMarketValue(nowPrice, tcnud.getRemainQty()),
-                    calUnreal(nowPrice, tcnud.getCost(), tcnud.getQty()),
-                    numberFormat(calProfitability(calUnreal(nowPrice, tcnud.getCost(), tcnud.getQty()), tcnud.getCost())) + "%"
+                    calService.calMarketValue(nowPrice, tcnud.getRemainQty()),
+                    calService.calUnreal(nowPrice, tcnud.getCost(), tcnud.getQty()),
+                    numberFormat(calService.calProfitability(calService.calUnreal(nowPrice, tcnud.getCost(), tcnud.getQty()), tcnud.getCost())) + "%"
             ));
         }
         if (null == request.getMaxLimit() && null == request.getMinLimit()) {
@@ -416,40 +413,7 @@ public class TradeService {
         return filterList;// 未實現損益明細-過濾後
     }
 
-    private Long calUnreal(double nowPrice, Long cost, Long qty) {
-        return (long) Precision.round((nowPrice * qty) - cost - calFee(calAmt(nowPrice, qty)) - calTax(calAmt(nowPrice, qty)), 0);
-    }
-
-    private Long calMarketValue(double nowPrice, Long qty) {
-        return (calAmt(nowPrice, qty) - calFee(calAmt(nowPrice, qty)) - calTax(calAmt(nowPrice, qty)));
-    }
-
-    private Long calAmt(Double price, Long qty) {
-        return (long) Precision.round(price * qty, 0);
-    }
-
-    private Long calFee(Long amt) {
-        return (long) Precision.round(amt * 0.001425, 0);
-    }
-
-    private Long calTax(Long amt) {
-        return (long) Precision.round(amt * 0.003, 0);
-    }
-
     private String numberFormat(double value) {
         return String.format("%.2f", value);
-    }
-
-    private double calProfitability(Long unrealProfit, Long cost) {
-        return Precision.round((unrealProfit.doubleValue() / cost.doubleValue()) * 100, 2);
-    }
-
-    private Long calSumCost(UnrealProfitRequest request,String  date){
-        List<TCNUD> tcnudList= tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(),request.getCustSeq(),date);
-        Long sum=0L;
-        for (TCNUD tcnud:tcnudList){
-            sum+=tcnud.getCost();
-        }
-        return sum;
     }
 }
