@@ -18,7 +18,6 @@ public class Symbol {
     String shortname;
     @XmlAttribute
     String mtype;
-
     String responseCode;
     String message;
 }

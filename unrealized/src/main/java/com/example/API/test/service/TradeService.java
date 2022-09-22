@@ -103,7 +103,7 @@ public class TradeService {
                         unrealProfitResult.setSumCost((null == unrealProfitResult.getSumCost()) ? detail.getCost() : unrealProfitResult.getSumCost() + detail.getCost());
                     }// 個別彙總
                     unrealProfitResult.setStock(stock);
-                    unrealProfitResult.setStockName(mstmbService.getStockInfo(stock).getShortname());
+                    unrealProfitResult.setStockName(mstmbService.getStockInfo(stock).getSymbolList().get(0).getShortname());
                     unrealProfitResult.setNowPrice(numberFormat(mstmbService.getNowPrice(stock)));//20220920 更新股價
                     unrealProfitResult.setSumMarketValue(calService.calMarketValue(Double.parseDouble(unrealProfitResult.getNowPrice()), unrealProfitResult.getSumRemainQty()));
                     unrealProfitResult.setSumUnrealProfit(calService.calUnreal(Double.parseDouble(unrealProfitResult.getNowPrice()), unrealProfitResult.getSumCost(), unrealProfitResult.getSumRemainQty()));
@@ -185,12 +185,12 @@ public class TradeService {
                     hcmio.getModDate(), hcmio.getModTime(), hcmio.getModUser());
             hcmioRepository.save(hcmio); //==============存入DB
             //====================明細金額計算完畢後================================
-            double nowPrice = (Double.parseDouble(mstmbService.getStockInfo(request.getStock()).getDealprice()));// 撈出現價
+            double nowPrice = (Double.parseDouble(mstmbService.getStockInfo(request.getStock()).getSymbolList().get(0).getDealprice()));// 撈出現價
 
             detail.setTradeDate(hcmio.getTradeDate());
             detail.setDocSeq(hcmio.getDocSeq());
             detail.setStock(request.getStock());
-            detail.setStockName(mstmbService.getStockInfo(request.getStock()).getShortname());
+            detail.setStockName(mstmbService.getStockInfo(request.getStock()).getSymbolList().get(0).getShortname());
             detail.setBuyPrice(numberFormat(request.getPrice()));
             detail.setNowPrice(numberFormat(nowPrice)); // 設定現價
             detail.setQty(request.getQty());
@@ -242,17 +242,12 @@ public class TradeService {
                 T++;
             }
         }
-//        if (null == tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))) { // 資料庫運算
-//            response.setResponseCode("001");
-//            response.setMessage("查無符合資料");
-//            return response;
-//        }
         if (null == tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime()))) { //內部運算
             response.setResponseCode("001");
             response.setMessage("查無符合資料");
             return response;
         }
-//        response.setSettlementAmount(tcnudRepository.getSumCost(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
+
         response.setSettlementAmount(calService.calSumCost(request, dateFormat.format(today.getTime())));
         response.setTcnudList(tcnudRepository.findByBCT(request.getBranchNo().toUpperCase(), request.getCustSeq(), dateFormat.format(today.getTime())));
         response.setResponseCode("000");
@@ -267,7 +262,7 @@ public class TradeService {
             message.append("資料不完整 ");
             return message.toString();
         }
-        if (null == mstmbService.getStockInfo(request.getStock()).getMtype()) {
+        if (null == mstmbService.getStockInfo(request.getStock()).getSymbolList().get(0).getMtype()) {
             message.append("沒有這支股票 ");
         }
         if (request.getQty() < 1 && null != request.getQty()) {
@@ -358,7 +353,7 @@ public class TradeService {
         } else if (null != request.getMinLimit() && 0 == request.getMinLimit()) {
             checkResult.append("002min can not be 0 ");
         } else if (null != request.getStock() && !request.getStock().isEmpty() && !request.getStock().isBlank()) {
-            if (null == mstmbService.getStockInfo(request.getStock()).getMtype()) {
+            if (null == mstmbService.getStockInfo(request.getStock()).getSymbolList().get(0).getMtype()) {
                 checkResult.append("001stock does not exist");
             }
         } else if (tcnudRepository.getStockList(request.getBranchNo(), request.getCustSeq()).isEmpty()) {
@@ -370,7 +365,7 @@ public class TradeService {
     private List<Detail> getDetailList(UnrealProfitRequest request) {
         List<TCNUD> tcnudList = tcnudRepository.findByBCS(request.getBranchNo(), request.getCustSeq(), request.getStock());
         List<Detail> detailRespons = new ArrayList<>();
-        String stockName = mstmbService.getStockInfo(request.getStock()).getShortname();
+        String stockName = mstmbService.getStockInfo(request.getStock()).getSymbolList().get(0).getShortname();
         Double nowPrice = mstmbService.getNowPrice(request.getStock());
         for (TCNUD tcnud : tcnudList) {
             detailRespons.add(new Detail(

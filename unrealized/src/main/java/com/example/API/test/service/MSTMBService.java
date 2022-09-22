@@ -22,8 +22,11 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Service
@@ -122,36 +125,42 @@ public class MSTMBService {
         return String.format("%.2f", value);
     }
 
-    public Double getNowPrice(String stock){
+    public Double getNowPrice(String stock) {
         RestTemplate restTemplate = new RestTemplate();
-        Symbols response= restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock="+stock,Symbols.class);
+        Symbols response = restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock=" + stock, Symbols.class);
         return Double.parseDouble(response.getSymbolList().get(0).getDealprice());
     }
 
-    public Symbol getStockInfo(String stock){
+    public Symbols getStockInfo(String stock) {
         try {
             RestTemplate restTemplate = new RestTemplate();
-            Symbols response= restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock="+stock,Symbols.class);
-            assert response != null;
-            response.getSymbolList().get(0).setResponseCode("000");
-            response.getSymbolList().get(0).setMessage("success");
-            return response.getSymbolList().get(0);
-        }
-        catch (Exception exception){
-            return new Symbol(null,null,null,null,"005","連線失敗");
+            Symbols symbols = restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock=" + stock, Symbols.class);
+            if (null == symbols) {
+                return new Symbols(null, "002", "查無結果");
+            }
+            Stream<Symbol> existStock = symbols.getSymbolList().stream().filter(symbol -> 0 < Double.parseDouble(symbol.getDealprice()));
+            Stream<Symbol> absent = symbols.getSymbolList().stream().filter(symbol -> 0 >= Double.parseDouble(symbol.getDealprice()));
+
+            existStock.forEach(symbol -> {
+                symbol.setResponseCode("000");
+                symbol.setMessage("success");
+            });
+
+            absent.forEach(symbol -> {
+                symbol.setResponseCode("001");
+                symbol.setMessage("查無結果");
+            });
+
+            symbols.setResponseCode("000");
+            symbols.setMessage("success");
+
+            return symbols;
+
+        } catch (Exception exception) {
+            System.out.println(exception.getMessage());
+            exception.printStackTrace();
+            return new Symbols(null, "005", "連線失敗");
         }
     }
-//    public Symbol getStockInfo(String stock){
-//        try {
-//            RestTemplate restTemplate = new RestTemplate();
-//            Symbol response= restTemplate.getForObject("http://systexdemo.ddns.net:443/Quote/Stock.jsp?stock="+stock,Symbol.class);
-//            assert response != null;
-//            response.setResponseCode("000");
-//            response.setMessage("success");
-//            return response;
-//        }
-//        catch (Exception exception){
-//            return new Symbol(null,null,null,null,"005","連線失敗");
-//        }
-//    }
+
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -29,12 +30,13 @@ public class StockController {
     }
 
     @GetMapping("/find")
-    public Symbol findByStock(@RequestParam String stock) {
+    public Symbols findByStock(@RequestParam String stock) {
         try {
              return service.getStockInfo(stock);
         }
         catch (Exception exception){
-            return new Symbol(null,null,null,null,"005","連線失敗");
+            System.out.println("Error: "+Arrays.toString(exception.getStackTrace()));
+            return new Symbols(null,"005","連線失敗");
         }
     }
 }
